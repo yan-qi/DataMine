@@ -1,24 +1,15 @@
 allprojects  {
   group = 'recordbuffer'
   version = '0.9'
-}
-
-subprojects {
-  apply plugin: 'java'
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-  tasks.withType(JavaCompile) {
-  	options.encoding = 'UTF-8'
-  }
 
   apply plugin: 'idea'
-//  apply plugin: 'checkstyle'
+  apply plugin: 'checkstyle'
 
-//  checkstyle {
-//    configFile rootProject.file('gbi-checkstyle_checks.xml')
-//    toolVersion '7.7'    // set Checkstyle version here
-//    showViolations = true
-//  }
+  checkstyle {
+    configFile rootProject.file('gbi-checkstyle_checks.xml')
+    toolVersion '7.7'    // set Checkstyle version here
+    showViolations = true
+  }
 
   idea {
     module {
@@ -28,16 +19,27 @@ subprojects {
       sourceDirs += file('src/main/gen')
     }
   }
-
+  //uncomment this for local test
   repositories {
     mavenLocal()
+  }
+
+}
+
+subprojects {
+  apply plugin: 'java'
+
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+  tasks.withType(JavaCompile) {
+  	options.encoding = 'UTF-8'
   }
 
   // External variables
   ext {
     junitVersion = "4.12"
-    scalaVersion = "2.10"
-    sparkVersion = "1.6.0"
+    scalaVersion = "2.11"
+    sparkVersion = "2.3.1"
   }
 
   dependencies {
@@ -50,7 +52,4 @@ subprojects {
     useJUnit()
   }
   tasks.withType(Javadoc).all { enabled = false }
-
-  sourceSets.main.java.srcDirs += "src/main/gen"
-
 }
