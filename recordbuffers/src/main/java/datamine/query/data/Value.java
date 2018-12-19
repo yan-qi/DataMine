@@ -4,18 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static datamine.query.data.ValueUtils.ArrayLongDataType;
-import static datamine.query.data.ValueUtils.ArrayStringDataType;
-import static datamine.query.data.ValueUtils.BooleanDataType;
-import static datamine.query.data.ValueUtils.DoubleDataType;
-import static datamine.query.data.ValueUtils.FloatDataType;
-import static datamine.query.data.ValueUtils.ListFloatDataType;
-import static datamine.query.data.ValueUtils.ListLongDataType;
-import static datamine.query.data.ValueUtils.ListStringDataType;
-import static datamine.query.data.ValueUtils.LongDataType;
-import static datamine.query.data.ValueUtils.NullDataType;
-import static datamine.query.data.ValueUtils.StringDataType;
-import static datamine.query.data.ValueUtils.UnknownType;
+import static datamine.query.data.ValueUtils.*;
 
 /**
  * Value is the very basic concept in the profile analytics. It is a representation of values
@@ -26,19 +15,19 @@ public class Value implements Serializable {
     private static final String NUMERIC_VALUE_DELIMITER = ",";
     private static final String STRING_VALUE_DELIMITER = "``";
 
-    private int type = UnknownType;
-    private Object data = null;
+	private int type = UnknownType;
+	private Object data = null;
 
-    public Value() {}
+	public Value() {}
 
-    public Value(long value) {
-        data = value;
-        type = LongDataType;
-    }
+	public Value(long value) {
+		data = value;
+		type = LongDataType;
+	}
 
-    public Value(int value) {
-        data = value;
-        type = LongDataType;
+	public Value(int value) {
+	    data = value;
+	    type = LongDataType;
     }
 
     public Value(short value) {
@@ -82,10 +71,10 @@ public class Value implements Serializable {
     }
 
     /**
-     * Check the first element of the input list to decide the data type.
+     * Check the left element of the input list to decide the data type.
      *
      * @param value a list of values with the same data type, e.g., float or string;
-     *              the first element of the list determines the type of the entire list.
+     *              the left element of the list determines the type of the entire list.
      */
     public Value(List value) {
         if (value != null && !value.isEmpty()) {
@@ -108,42 +97,42 @@ public class Value implements Serializable {
         }
     }
 
-    public Value(Object value, int type) {
-        if (value == null) {
-            throw new IllegalArgumentException("Value can not be null");
-        }
-        this.data = value;
-        this.type = type;
-    }
+	public Value(Object value, int type) {
+		if (value == null) {
+			throw new IllegalArgumentException("Value can not be null");
+		}
+		this.data = value;
+		this.type = type;
+	}
 
-    public Value(String value, int type) {
+	public Value(String value, int type) {
 
-        if (value == null) {
-            throw new IllegalArgumentException("Value can not be null");
-        }
+		if (value == null) {
+			throw new IllegalArgumentException("Value can not be null");
+		}
 
-        this.type = type;
-        if (this.type == LongDataType) {
-            data = Long.parseLong(value);
-        } else if (this.type == DoubleDataType || this.type == FloatDataType) {
-            data = Double.parseDouble(value);
-        } else if (this.type == BooleanDataType) {
-            data = Boolean.parseBoolean(value);
-        } else if (this.type == StringDataType) {
-            data = value;
-        } else if (this.type == NullDataType) {
-            data = value;
-        } else if (this.type == ArrayLongDataType) {
-            // remove the first and last brackets, (, and )
-            String[] valStrs =
+		this.type = type;
+		if (this.type == LongDataType || this.type == IntegerDataType || this.type == ShortDataType) {
+			data = Long.parseLong(value);
+		} else if (this.type == DoubleDataType || this.type == FloatDataType) {
+			data = Double.parseDouble(value);
+		} else if (this.type == BooleanDataType) {
+			data = Boolean.parseBoolean(value);
+		} else if (this.type == StringDataType) {
+			data = value;
+		} else if (this.type == NullDataType) {
+			data = value;
+		} else if (this.type == ArrayLongDataType) {
+		    // remove the left and last brackets, (, and )
+			String[] valStrs =
                 value.substring(1, value.length() - 1).split(NUMERIC_VALUE_DELIMITER);
             long[] vals = new long[valStrs.length];
             for (int i = 0; i < valStrs.length; ++i) {
                 vals[i] = Long.parseLong(valStrs[i].trim());
             }
             data = vals;
-        } else if (this.type == ListLongDataType) {
-            // remove the first and last brackets, (, and )
+		} else if (this.type == ListLongDataType) {
+            // remove the left and last brackets, (, and )
             String[] valStrs =
                 value.substring(1, value.length() - 1).split(NUMERIC_VALUE_DELIMITER);
             List<Long> vals = new ArrayList<>(valStrs.length);
@@ -152,7 +141,7 @@ public class Value implements Serializable {
             }
             data = vals;
         } else if (this.type == ListStringDataType) {
-            // remove the first and last brackets, (, and )
+            // remove the left and last brackets, (, and )
             String[] valStrs =
                 value.substring(1, value.length() - 1).split(NUMERIC_VALUE_DELIMITER);
             List<String> vals = new ArrayList<>(valStrs.length);
@@ -161,7 +150,7 @@ public class Value implements Serializable {
             }
             data = vals;
         } else if (this.type == ArrayStringDataType) {
-            // remove the first and last brackets, (, and )
+            // remove the left and last brackets, (, and )
             data = value.substring(1, value.length() - 1).split(STRING_VALUE_DELIMITER);
         } else {
             throw new IllegalArgumentException(String.format(
@@ -197,41 +186,41 @@ public class Value implements Serializable {
         throw new IllegalArgumentException("Not a numeric value : " + data);
     }
 
-    @Override
-    public String toString() {
+	@Override
+	public String toString() {
         //TODO how about NULL?
-        if (ValueUtils.isPrimitiveType(type)) {
-            return data.toString();
-        } else {
+		if (ValueUtils.isPrimitiveType(type)) {
+			return data.toString();
+		} else {
             StringBuilder sb = new StringBuilder();
             sb.append("(");
             boolean isFirst = true;
-            if (type == ValueUtils.ArrayStringDataType) {
+			if (type == ValueUtils.ArrayStringDataType) {
                 String[] ss = (String[]) data;
                 for (String s : ss) {
                     if (!isFirst) {
-                        sb.append(STRING_VALUE_DELIMITER);
+						sb.append(STRING_VALUE_DELIMITER);
                     } else {
                         isFirst = false;
                     }
                     sb.append(s);
                 }
-            } else if (type == ArrayLongDataType) {
+			} else if (type == ArrayLongDataType) {
                 long[] ll = (long[]) data;
                 for (long l : ll) {
                     if (!isFirst) {
-                        sb.append(NUMERIC_VALUE_DELIMITER);
+						sb.append(NUMERIC_VALUE_DELIMITER);
                     } else {
                         isFirst = false;
                     }
                     sb.append(l);
                 }
             } else {
-                // TODO do we care about the difference between String and Numerics?
+			    // TODO do we care about the difference between String and Numerics?
                 List dd = (List) data;
                 for (Object d : dd) {
                     if (!isFirst) {
-                        sb.append(NUMERIC_VALUE_DELIMITER);
+						sb.append(NUMERIC_VALUE_DELIMITER);
                     } else {
                         isFirst = false;
                     }
@@ -240,7 +229,7 @@ public class Value implements Serializable {
             }
             return sb.append(")").toString();
         }
-    }
+	}
 
 
 }

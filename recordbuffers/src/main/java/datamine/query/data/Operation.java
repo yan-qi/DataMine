@@ -8,6 +8,9 @@ import java.util.Map;
  */
 public interface Operation extends Serializable {
 
+    public static final String SYNTAX_ERROR_LOG_PREFIX = "PQL Syntax Error: ";
+    public static final String RUNTIME_ERROR_LOG_PREFIX = "PQL Runtime Error: ";
+
     /**
      * Apply the operation to the input and generate
      * result.
