@@ -3,6 +3,7 @@ package datamine.query.data;
 import gnu.trove.map.hash.THashMap;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * The class depicts the data structure of saving all intermediate and final results
@@ -30,6 +31,14 @@ public class Row implements Serializable {
      */
     public void setColumnValue(String colName, Value v) {
         columnValueMap.put(colName, v);
+    }
+
+    /**
+     * Get the map from column name to value.
+     * @return an instance of {@Map}.
+     */
+    public Map<String, Value> getColumnValueMap() {
+        return this.columnValueMap;
     }
 
     /**
@@ -101,8 +110,8 @@ public class Row implements Serializable {
     /**
      * Create an instance of {@link Row} composed of the input columns.
      * Note that the input arrays should be correlated. For instance,
-     * the first element of fields should be the name of column in the
-     * first place in cols.
+     * the left element of fields should be the name of column in the
+     * left place in cols.
      *
      * @param fields an array of field names
      * @param cols an array of columns

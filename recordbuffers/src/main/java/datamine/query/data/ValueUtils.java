@@ -1,11 +1,11 @@
 package datamine.query.data;
 
+import datamine.storage.idl.type.PrimitiveType;
+import datamine.utils.DataHasher;
+
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.regex.Pattern;
-
-import datamine.storage.idl.type.PrimitiveType;
-import datamine.utils.DataHasher;
 
 /**
  * It is a collection of commonly used routines that all other processes need.
@@ -18,6 +18,8 @@ public class ValueUtils implements Serializable {
     public static final int UnknownType = PrimitiveType.UNKNOWN.getId();
     public static final int NullDataType = PrimitiveType.NULL.getId();
     public static final int LongDataType = PrimitiveType.INT64.getId();
+    public static final int IntegerDataType = PrimitiveType.INT32.getId();
+    public static final int ShortDataType = PrimitiveType.INT16.getId();
     public static final int FloatDataType = PrimitiveType.FLOAT.getId();
     public static final int DoubleDataType = PrimitiveType.DOUBLE.getId();
     public static final int StringDataType = PrimitiveType.STRING.getId();
@@ -31,9 +33,9 @@ public class ValueUtils implements Serializable {
     /**
      * Constant Values
      */
-    public static Value trueValue   = new Value(true, ValueUtils.BooleanDataType);
-    public static Value falseValue  = new Value(false, ValueUtils.BooleanDataType);
-    public static Value nullValue   = new Value("null", ValueUtils.NullDataType);
+    public static final Value trueValue   = new Value(true, ValueUtils.BooleanDataType);
+    public static final Value falseValue  = new Value(false, ValueUtils.BooleanDataType);
+    public static final Value nullValue   = new Value("null", ValueUtils.NullDataType);
 
     /**
      * Dummy Constructor to prevent from creating instance
@@ -43,12 +45,31 @@ public class ValueUtils implements Serializable {
 
 
     /**
+     * Check if the input type is integer (e.g., short, integer, long)
+     * @param type the type ID
+     * @return true if the type ID is an integer (e.g., short, integer, long)
+     */
+    public static boolean isIntegerType(int type) {
+        return  type == LongDataType || type == IntegerDataType || type == ShortDataType;
+    }
+
+    /**
      * Check if the input type is of numeric
      * @param type the type ID
      * @return true if the type ID is of numeric value
      */
     public static boolean isNumbericType(int type) {
-        return type == FloatDataType || type == LongDataType || type == DoubleDataType;
+        return type == FloatDataType || type == LongDataType || type == DoubleDataType ||
+                type == IntegerDataType || type == ShortDataType;
+    }
+
+    /**
+     * Check if the input type is of floating point number
+     * @param type the type ID
+     * @return true if the type ID is of floating point number
+     */
+    public static boolean isFloatingType(int type) {
+        return type == FloatDataType || type == DoubleDataType;
     }
 
     /**
@@ -124,7 +145,7 @@ public class ValueUtils implements Serializable {
 
         throw new IllegalArgumentException(
             String.format("Incompatible data types: %s v.s. %s",
-                left.getType(), right.getType()));
+            left.getType(), right.getType()));
     }
 
     /**
@@ -139,7 +160,7 @@ public class ValueUtils implements Serializable {
     }
 
     /**
-     * Compare two numeric or string values to see if the first is larger than the other.
+     * Compare two numeric or string values to see if the left is larger than the other.
      * @param left the one value
      * @param right the other value
      * @return true if the left value is larger than the right.
@@ -181,7 +202,7 @@ public class ValueUtils implements Serializable {
     }
 
     /**
-     * Compare two numeric or string values to see if the first is less than the other.
+     * Compare two numeric or string values to see if the left is less than the other.
      * @param left the one value
      * @param right the other value
      * @return true if the left value is less than the right.
@@ -242,6 +263,16 @@ public class ValueUtils implements Serializable {
             value.getType() == DoubleDataType) {
             Number num = (Number) value.getValue();
             return new Value(num.longValue(), LongDataType);
+        }
+
+        if (value.getType() == StringDataType) {
+            try {
+                return new Value(Long.parseLong(value.toString()), LongDataType);
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException(String.format(
+                        "Cannot cast the value (%s) to long",
+                        value.toString()));
+            }
         }
 
         throw new IllegalArgumentException(String.format(
@@ -312,13 +343,13 @@ public class ValueUtils implements Serializable {
             switch (opr) {
                 case "+":
                     return new Value(l.longValue() + r.longValue(),
-                        LongDataType);
+                            LongDataType);
                 case "-":
                     return new Value(l.longValue() - r.longValue(),
-                        LongDataType);
+                            LongDataType);
                 case "*":
                     return new Value(l.longValue() * r.longValue(),
-                        LongDataType);
+                            LongDataType);
                 case "/":
                     if (r.longValue() == 0l) {
                         return nullValue;
@@ -355,6 +386,13 @@ public class ValueUtils implements Serializable {
                         return new Value(Float.NaN, FloatDataType);
                     } else {
                         return new Value(l.doubleValue() / r.doubleValue(),
+                            FloatDataType);
+                    }
+                case "%":
+                    if (r.floatValue() == 0l) {
+                        return new Value(Float.NaN, FloatDataType);
+                    } else {
+                        return new Value(l.doubleValue() % r.doubleValue(),
                             FloatDataType);
                     }
             }
@@ -421,6 +459,108 @@ public class ValueUtils implements Serializable {
      */
     public static Value mod(Value left, Value right) {
         return numbericOpr(left, right, "%");
+    }
+
+//    /**
+//     *
+//     * @param left
+//     * @param index
+//     * @param right
+//     * @return
+//     */
+//    public static Value like(Value left, int index, Value right) {
+//
+//        if (left == null || right == null ||
+//            left.getType() == NullDataType ||
+//            right.getType() == NullDataType ||
+//            left.getValue() == null ||
+//            right.getValue() == null) {
+//            return falseValue;
+//        }
+//
+//        if (left.getType() == ListStringDataType &&
+//            right.getType() == StringDataType) {
+//            List<String> lVals = (List<String>) left.getValue();
+//            String rVal = (String) right.getValue();
+//            return Pattern.matches(getRegEx(rVal), lVals.get(index))
+//                ? trueValue
+//                : falseValue;
+//        }
+//
+//        throw new IllegalArgumentException(String.format(
+//            "Incompatible data types: %s v.s. %s",
+//            left.getType(), right.getType()));
+//    }
+
+    /**
+     * Translate a wildcard string into regular expression
+     * @param psedoRegEx the input wildcard string
+     * @return the regular expression of the input wildcard string
+     */
+    public static String getRegEx(String psedoRegEx) {
+        StringBuilder s = new StringBuilder();
+        s.append('^');
+        for (int i = 0, is = psedoRegEx.length(); i < is; i++) {
+            char c = psedoRegEx.charAt(i);
+            switch (c) {
+                case '%':
+                    s.append(".*");
+                    break;
+                case '?':
+                    s.append(".");
+                    break;
+                // escape special regexp-characters
+                case '{':
+                case '}':
+                case '[':
+                case ']':
+                case '(':
+                case ')':
+                case '.':
+                case '|':
+                case '$':
+                case '^':
+                case '\\':
+                    s.append("\\");
+                    s.append(c);
+                    break;
+                default:
+                    s.append(c);
+                    break;
+            }
+        }
+        s.append('$');
+        return (s.toString());
+    }
+
+    /**
+     * Check if the input String matches the right pattern
+     * @param txt the input string
+     * @param pattern the pattern
+     * @return true if the input string matches the pattern
+     */
+    public static Value like(Value txt, Value pattern) {
+
+        if (txt == null || pattern == null ||
+            txt.getType() == NullDataType ||
+            pattern.getType() == NullDataType ||
+            txt.getValue() == null ||
+            pattern.getValue() == null) {
+            return nullValue;
+        }
+
+        if (txt.getType() == StringDataType &&
+            pattern.getType() == StringDataType) {
+            String l = (String) txt.getValue();
+            String r = (String) pattern.getValue();
+            return Pattern.matches(getRegEx(r), l)
+                ? trueValue
+                : falseValue;
+        }
+
+        throw new IllegalArgumentException(String.format(
+            "Incompatible data types: %s v.s. %s",
+            txt.getType(), pattern.getType()));
     }
 
     /**
