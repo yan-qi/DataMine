@@ -1,10 +1,10 @@
-apply plugin: 'scala'
-apply plugin: 'antlr'
+description = 'RecordBuffer'
+
+repositories {
+    mavenCentral()
+}
 
 dependencies {
-
-    antlr "org.antlr:antlr4:4.7"
-
     compile ("org.apache.spark:spark-sql_${scalaVersion}:${sparkVersion}")
 
     compile (group: 'com.github.scopt', name: 'scopt_2.10', version: '3.3.0') {
@@ -34,23 +34,6 @@ dependencies {
     testCompile 'org.testng:testng:6.8.21'
     testCompile ("org.scalatest:scalatest_${scalaVersion}:3.0.0")
 }
-
-generateGrammarSource {
-    arguments += ["-visitor", "-long-messages"]
-}
-
-generateGrammarSource << {
-    println "Copying generated grammar lexer/parser files to main directory."
-    copy {
-        from "${buildDir}/generated-src/antlr/main"
-        into "src/main/gen/datamine/query/parser/"
-    }
-}
-
-sourceSets.main.scala.srcDirs += "src/main/gen"
-sourceSets.main.scala.srcDirs += "src/main/java"
-sourceSets.main.java.srcDirs = []
-
 
 test.useTestNG()
 
