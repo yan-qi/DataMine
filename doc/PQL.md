@@ -35,7 +35,7 @@ There are three layers, illustrated in the diagram below.
 * Data model: it defines the data structure or format of the profile. In other words, it describes how the information is organized given a profile.
 * Applications: it provides APIs or query language through which analytics can be proceeded.  
 
-![](imgs/stack.png)
+![](res/stack.png)
 
 In the post, we focus on the data model and query language. 
 	
@@ -354,9 +354,9 @@ when past 10 days
 Session is a commonly used concept in the Internet world, to measure the user's behavior taken within a period of time or with regard to completion of a task. The session of play activities measures the audience activities while consuming the content. Particularly a session of play activity is determined by content, play start time, duration, given a profile. A new session can be created by a timeout (or long interval), or content changing. 
 
 
-![](imgs/session-1.png)
+![](res/session-1.png)
 
-![](imgs/session-2.png)
+![](res/session-2.png)
 
 
 The PQL introduces the session function, to help count the number of sessions in the profile. 
@@ -454,7 +454,7 @@ select_statement :
 
 To help issue the query in a friendly way, a GUI tool, query assistant, is developed for user to check the table schema, write and run the query, and look into the result. 
 
-![](imgs/query-assistant-1.png)
+![](res/query-assistant-1.png)
 
 ### PQL Gramma
 
