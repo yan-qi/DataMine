@@ -64,7 +64,7 @@ public class Substr extends BinaryOperation {
 	    if (endPosCol != null) {
 	        endPosId = ", " + endPosCol.getID();
         }
-		return "substr(" + left.getID() + "," + right.getID() + endPosId + ")";
+		return "substr(" + left.getID() + "," + right.getID() + "," + endPosId + ")";
 	}
 
 }

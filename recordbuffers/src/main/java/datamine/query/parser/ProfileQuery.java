@@ -1,16 +1,6 @@
 package datamine.query.parser;
 
-import datamine.query.data.Column;
-import datamine.query.data.Operation;
-import datamine.query.data.Value;
-import datamine.query.data.ValueUtils;
 import datamine.query.functions.*;
-import datamine.storage.api.RecordMetadataInterface;
-import datamine.storage.idl.Field;
-import datamine.storage.idl.generator.metadata.GetAllMetadataEnumClasses;
-import datamine.storage.idl.generator.metadata.GetAllMetadataEnumClasses2;
-import datamine.storage.idl.type.*;
-import datamine.storage.recordbuffers.RecordBufferMeta;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -24,7 +14,31 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+import datamine.query.data.Column;
+import datamine.query.data.Operation;
+import datamine.query.data.Value;
+import datamine.query.data.ValueUtils;
+import datamine.storage.api.RecordMetadataInterface;
+import datamine.storage.idl.Field;
+import datamine.storage.idl.generator.metadata.GetAllMetadataEnumClasses;
+import datamine.storage.idl.generator.metadata.GetAllMetadataEnumClasses2;
+import datamine.storage.idl.type.CollectionFieldType;
+import datamine.storage.idl.type.FieldType;
+import datamine.storage.idl.type.FieldTypeFactory;
+import datamine.storage.idl.type.GroupFieldType;
+import datamine.storage.idl.type.PrimitiveType;
+import datamine.storage.recordbuffers.RecordBufferMeta;
 
 public class ProfileQuery extends PQLBaseListener {
 
@@ -201,9 +215,9 @@ public class ProfileQuery extends PQLBaseListener {
 
     // flags for nesting functions
     boolean isNestedFuncColumn = false;
-//    boolean inNestedFunc = false;
+    //    boolean inNestedFunc = false;
     Stack<Boolean> inNestedFuncFlagStack = null;
-//    boolean canCacheNestedFuncResult = true;
+    //    boolean canCacheNestedFuncResult = true;
     Stack<Boolean> canCacheNestedFuncResultFlagStack = null;
 
     @Override
@@ -260,7 +274,7 @@ public class ProfileQuery extends PQLBaseListener {
             }
 
             Column oprCol = Column.newInstance(
-                opr.getID(), opr.getResultValueType(), opr, null);
+                    opr.getID(), opr.getResultValueType(), opr, null);
             expressionStack.push(oprCol);
 
         } catch (Exception e) {
@@ -310,7 +324,7 @@ public class ProfileQuery extends PQLBaseListener {
             }
 
             Column oprCol = Column.newInstance(
-                opr.getID(), opr.getResultValueType(), opr, null);
+                    opr.getID(), opr.getResultValueType(), opr, null);
             expressionStack.push(oprCol);
 
         } catch (Exception e) {
@@ -327,7 +341,7 @@ public class ProfileQuery extends PQLBaseListener {
         Column binCol = expressionStack.pop();
         try {
             AggOperation aggOpr = ctx.DISTINCT() == null ?
-                new HistCount(binCol) : new HistDistinctCount2(binCol, distCol);
+                    new HistCount(binCol) : new HistDistinctCount2(binCol, distCol);
             Column countCol = Column.newInstance(aggOpr.getID(), aggOpr);
             countCol.setHasAggregation(true);
             parsingResult.mapColumnMap.put(countCol.getID(), countCol);
@@ -353,7 +367,7 @@ public class ProfileQuery extends PQLBaseListener {
                 threshold = Integer.parseInt(ctx.DECIMAL().getText());
             }
             AggOperation aggOpr = ctx.DISTINCT() == null ?
-                new HistCount(binCol) : new HistDistinctCount(binCol, distCol, threshold);
+                    new HistCount(binCol) : new HistDistinctCount(binCol, distCol, threshold);
             Column countCol = Column.newInstance(aggOpr.getID(), aggOpr);
             countCol.setHasAggregation(true);
             parsingResult.mapColumnMap.put(countCol.getID(), countCol);
@@ -370,7 +384,7 @@ public class ProfileQuery extends PQLBaseListener {
         ParseTree distinctExpression = ctx.distinct_expression();
         try {
             AggOperation aggOpr = distinctExpression == null ?
-                new Count() : new CountDistinct(expressionStack.pop());
+                    new Count() : new CountDistinct(expressionStack.pop());
             Column countCol = Column.newInstance(aggOpr.getID(), aggOpr);
             countCol.setHasAggregation(true);
             parsingResult.mapColumnMap.put(countCol.getID(), countCol);
@@ -390,7 +404,7 @@ public class ProfileQuery extends PQLBaseListener {
         try {
             if (ctx.SUM() != null) {
                 aggOpr = ctx.all_distinct_expression().DISTINCT() != null ?
-                    new SumDistinct(col) : new Sum(col);
+                        new SumDistinct(col) : new Sum(col);
             } else if (ctx.MAX() != null) {
                 aggOpr = new Max(col);
             } else if (ctx.MIN() != null) {
@@ -419,21 +433,21 @@ public class ProfileQuery extends PQLBaseListener {
             if (ctx.STRING() != null) {
                 String content = ctx.STRING().getText();
                 Constant cont = new Constant(
-                    new Value(content.substring(1, content.length()-1), ValueUtils.StringDataType));
+                        new Value(content.substring(1, content.length()-1), ValueUtils.StringDataType));
                 expressionStack.push(
-                    Column.newInstance("StringConst-" + cont.getID(), cont));
+                        Column.newInstance("StringConst-" + cont.getID(), cont));
             } else if (ctx.DECIMAL() != null) {
                 String numberTxt = ctx.DECIMAL().getText();
                 long number = Long.parseLong(numberTxt) * sign;
                 Constant cont = new Constant(new Value(number, ValueUtils.LongDataType));
                 expressionStack.push(
-                    Column.newInstance("DecimalConst-" + numberTxt, cont));
+                        Column.newInstance("DecimalConst-" + numberTxt, cont));
             } else if (ctx.FLOAT() != null) {
                 String floatTxt = ctx.FLOAT().getText();
                 double val = Double.parseDouble(floatTxt) * sign;
                 Constant cont = new Constant(new Value(val, ValueUtils.FloatDataType));
                 expressionStack.push(
-                    Column.newInstance("FloatConst-" + floatTxt, cont)
+                        Column.newInstance("FloatConst-" + floatTxt, cont)
                 );
             }
         } catch (Exception e) {
@@ -474,14 +488,14 @@ public class ProfileQuery extends PQLBaseListener {
 
     private boolean inNestedFunc() {
         return inNestedFuncFlagStack!=null &&
-            !inNestedFuncFlagStack.isEmpty() &&
-            inNestedFuncFlagStack.peek();
+                !inNestedFuncFlagStack.isEmpty() &&
+                inNestedFuncFlagStack.peek();
     }
 
     private boolean canCacheNestedFuncResult() {
         return canCacheNestedFuncResultFlagStack!=null &&
-            !canCacheNestedFuncResultFlagStack.isEmpty() &&
-            canCacheNestedFuncResultFlagStack.peek();
+                !canCacheNestedFuncResultFlagStack.isEmpty() &&
+                canCacheNestedFuncResultFlagStack.peek();
     }
 
     private Column addBasicField(String fieldFullName, boolean hasOriginalFullName) {
@@ -519,13 +533,13 @@ public class ProfileQuery extends PQLBaseListener {
             int typeId = type.getID();
 
             if (typeId == PrimitiveType.INT64.getId()
-                || typeId == PrimitiveType.INT32.getId()
-                || typeId == PrimitiveType.INT16.getId()) {
+                    || typeId == PrimitiveType.INT32.getId()
+                    || typeId == PrimitiveType.INT16.getId()) {
 
                 col = Column.newInstance(nfFieldFullName, ValueUtils.ListLongDataType);
 
             } else if (typeId == ValueUtils.FloatDataType
-                || typeId == ValueUtils.DoubleDataType) {
+                    || typeId == ValueUtils.DoubleDataType) {
 
                 col = Column.newInstance(nfFieldFullName, ValueUtils.ListFloatDataType);
 
@@ -677,7 +691,7 @@ public class ProfileQuery extends PQLBaseListener {
         }
 
         Operation opr = new PlaySessionCount(target, start, duration,
-            predicate, canCacheNestedFuncResult(), minDuration, limit, timeout);
+                predicate, canCacheNestedFuncResult(), minDuration, limit, timeout);
         Column col = Column.newInstance(opr.getID(), opr);
         parsingResult.nestedFuncColumns.add(col);
         expressionStack.push(col);
@@ -820,6 +834,7 @@ public class ProfileQuery extends PQLBaseListener {
     public void exitExtractStringFunction(PQLParser.ExtractStringFunctionContext ctx) {
         Column txtCol = expressionStack.pop();
         String regx = ctx.STRING().getText();
+        regx = regx.substring(1, regx.length() - 1);// remove the ' at the ends
         int index = 0;
         try {
             if (ctx.DECIMAL() != null) {
@@ -1214,9 +1229,9 @@ public class ProfileQuery extends PQLBaseListener {
         }
         this.parsingResult.caseOutputConditionList.add(defaultOutputCol);
         Column[] conditions = this.parsingResult.caseSearchConditionList.toArray(
-            new Column[this.parsingResult.caseSearchConditionList.size()]);
+                new Column[this.parsingResult.caseSearchConditionList.size()]);
         Column[] outputs = this.parsingResult.caseOutputConditionList.toArray(
-            new Column[this.parsingResult.caseOutputConditionList.size()]
+                new Column[this.parsingResult.caseOutputConditionList.size()]
         );
 
         try {
@@ -1246,11 +1261,11 @@ public class ProfileQuery extends PQLBaseListener {
             int days = Integer.parseInt(ctx.DECIMAL(0).getText());
             if (days > 0) {
                 Date end = ParserUtil.getBeginingOfDayForDate(
-                    ParserUtil.getCurrentDate(timeZone),
-                    timeZone);
+                        ParserUtil.getCurrentDate(timeZone),
+                        timeZone);
                 Date start = ParserUtil.getBeginingOfDayForDate(
-                    ParserUtil.getDateBeforeNumDays(end, days, timeZone),
-                    timeZone);
+                        ParserUtil.getDateBeforeNumDays(end, days, timeZone),
+                        timeZone);
                 addTS(start.getTime(), end.getTime() - 1);
             } else {
                 String msg = "Support past positive days only! - " + ctx.DECIMAL();
@@ -1321,9 +1336,9 @@ public class ProfileQuery extends PQLBaseListener {
 
     private void init() {
         Collection<Class<? extends RecordMetadataInterface>> tableMetadataSet =
-            metadataPath != null ?
-                new GetAllMetadataEnumClasses().apply(metadataPath) :
-                new GetAllMetadataEnumClasses2().apply(metadataPathList);
+                metadataPath != null ?
+                        new GetAllMetadataEnumClasses().apply(metadataPath) :
+                        new GetAllMetadataEnumClasses2().apply(metadataPathList);
 
         if (!tableMetadataSet.isEmpty()) {
             for (@SuppressWarnings("rawtypes") Class cur : tableMetadataSet) {
@@ -1449,17 +1464,17 @@ public class ProfileQuery extends PQLBaseListener {
             for (String tableTxt : wheretableSet) {
                 // find out the main table
                 String superTable = tableTxt.contains(".")
-                    ? tableTxt.substring(0, tableTxt.indexOf('.'))
-                    : tableTxt;
+                        ? tableTxt.substring(0, tableTxt.indexOf('.'))
+                        : tableTxt;
 
                 if (mainTable.isEmpty() || mainTable.equals(superTable)) {
                     mainTable = superTable;
                     if (!tableColMetaMap.containsKey(mainTable)) {
                         // deal with the tables occurring in FROM
                         tableSet.forEach(tableName ->
-                            tableColMetaMap.putAll(findNestedTableMeta(
-                                tableName.startsWith(mainTable) ?
-                                    tableName : mainTable + "." + tableName))
+                                tableColMetaMap.putAll(findNestedTableMeta(
+                                        tableName.startsWith(mainTable) ?
+                                                tableName : mainTable + "." + tableName))
                         );
 
                         // add the item of main table
@@ -1507,8 +1522,8 @@ public class ProfileQuery extends PQLBaseListener {
             Map<String, RecordBufferMeta> ret = new HashMap<>();
 
             String[] tables = tableInstanceName.contains(".")
-                ? tableInstanceName.split("\\.")
-                : new String[]{tableInstanceName};
+                    ? tableInstanceName.split("\\.")
+                    : new String[]{tableInstanceName};
 
             // the left table should be always main table
             RecordBufferMeta curTableMeta = metaMap.get(tables[0]);
@@ -1522,7 +1537,7 @@ public class ProfileQuery extends PQLBaseListener {
             StringBuilder fullTableNameSB = new StringBuilder(tables[0]);
             for (int i = 1; i < tables.length; ++i) {
                 RecordMetadataInterface fieldMeta =
-                    (RecordMetadataInterface) curTableMeta.getFieldMeta(tables[i]);
+                        (RecordMetadataInterface) curTableMeta.getFieldMeta(tables[i]);
                 if (fieldMeta.getField() == null) {
                     LOG.error("The field doesn't exist - " + fieldMeta);
                 }
